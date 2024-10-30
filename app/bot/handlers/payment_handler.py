@@ -7,7 +7,9 @@ from app.bot.keyboards.inline_keyboard import (
     subscription_duration_keyboard,
     payment_method_keyboard,
     network_selection_keyboard,
-    check_payment_keyboard
+    check_payment_keyboard,
+    payment_keyboard,
+    channel_link_keyboard
 )
 from app.bot.state_manager import UserState
 
@@ -24,6 +26,7 @@ async def pay_access(callback: CallbackQuery, state: FSMContext):
     )
 
     await state.set_state(UserState.subscription)
+    await callback.answer()
 
 
 @payment_router.callback_query(F.data.startswith("subscribe_"))
@@ -39,6 +42,7 @@ async def subscribe(callback: CallbackQuery, state: FSMContext):
     )
 
     await state.set_state(UserState.payment)
+    await callback.answer()
 
 
 @payment_router.callback_query(F.data.startswith("pay_stars"))
@@ -50,13 +54,17 @@ async def pay_stars(callback: CallbackQuery, state: FSMContext):
         6: 8000,
         12: 15000}.get(duration)
     duration = data.get("duration")
-    await callback.message.answer_invoice(title="Покупка ключей",
-                                          description=f"срок: {duration} месяц(ев)",
-                                          provider_token="",
-                                          currency="XTR",
-                                          prices=[types.LabeledPrice(label="XTR", amount=int(amount_required/2.04))],
-                                          payload="demo",
-                                          start_parameter="demo")
+    await callback.message.answer_invoice(
+        reply_markup=payment_keyboard(),
+        title="Покупка ключей",
+        description=f"срок: {duration} месяц(ев)",
+        provider_token="",
+        currency="XTR",
+        prices=[types.LabeledPrice(label="XTR", amount=int(amount_required / 2.04))],
+        payload="demo",
+    )
+    await callback.answer()
+
 
 @payment_router.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_q: types.PreCheckoutQuery):
@@ -65,4 +73,5 @@ async def process_pre_checkout_query(pre_checkout_q: types.PreCheckoutQuery):
 
 @payment_router.message()
 async def successful_payment(message: types.Message, state: FSMContext):
-    await message.answer("Платеж прошел успешно! Вы получили доступ к каналу", reply_markup=check_payment_keyboard(), message_effect_id="5104841245755180586")
+    await message.answer("Платеж прошел успешно! Вы получили доступ к каналу", reply_markup=channel_link_keyboard("https://t.me/+x9EXl0MiMlIxYjMy"),
+                         message_effect_id="5104841245755180586")

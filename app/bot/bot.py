@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
-from app.shared.config import Config
+from app.utils.config import Config
 
 
 class SubscriptionChecker:
